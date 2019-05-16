@@ -9,10 +9,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
-import random
-from DataUtils.Common import seed_num
-torch.manual_seed(seed_num)
-random.seed(seed_num)
 
 """
 Neural Networks model : Bidirection LSTM
@@ -21,36 +17,34 @@ Neural Networks model : Bidirection LSTM
 
 class BiLSTM(nn.Module):
     
-    def __init__(self, args):
+    def __init__(self, seq_length, hidden_size, dropout=0.75, num_layer=1):
         super(BiLSTM, self).__init__()
-        self.args = args
-        self.hidden_dim = args.lstm_hidden_dim
-        self.num_layers = args.lstm_num_layers
-        V = args.embed_num
-        D = args.embed_dim
-        C = args.class_num
-        # self.embed = nn.Embedding(V, D, max_norm=config.max_norm)
-        self.embed = nn.Embedding(V, D, padding_idx=args.paddingId)
-        # pretrained  embedding
-        if args.word_Embedding:
-            self.embed.weight.data.copy_(args.pretrained_weight)
-        self.bilstm = nn.LSTM(D, self.hidden_dim // 2, num_layers=1, dropout=args.dropout, bidirectional=True, bias=False)
-        print(self.bilstm)
 
-        self.hidden2label1 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
-        self.hidden2label2 = nn.Linear(self.hidden_dim // 2, C)
+        self.bilstm = nn.LSTM(seq_length, hidden_size // 2, num_layers=num_layer, dropout=dropout, bidirectional=True, bias=False)
+        # print(self.bilstm)
+
+        self.hidden2label1 = nn.Linear(hidden_size, hidden_size // 2)
+        self.hidden2label2 = nn.Linear(hidden_size // 2, 1)
         # self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, x):
-        embed = self.embed(x)
-        x = embed.view(len(x), embed.size(1), -1)
         bilstm_out, _ = self.bilstm(x)
 
         bilstm_out = torch.transpose(bilstm_out, 0, 1)
         bilstm_out = torch.transpose(bilstm_out, 1, 2)
-        bilstm_out = F.tanh(bilstm_out)
         bilstm_out = F.max_pool1d(bilstm_out, bilstm_out.size(2)).squeeze(2)
         y = self.hidden2label1(bilstm_out)
         y = self.hidden2label2(y)
         logit = y
         return logit
+
+
+def get_BiLSTM(seq_length, hidden_size, num_layer=1):
+    return BiLSTM(seq_length, hidden_size, num_layer=num_layer)
+
+
+if __name__ == '__main__':
+    x = torch.randn(46, 32, 1)
+    net = BiLSTM(1, 50)
+    out = net(x)
+    print(out.shape)

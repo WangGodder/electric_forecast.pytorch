@@ -4,6 +4,8 @@
 # @Github  : https://github.com/WangGodder
 
 from .model_BiGRU import get_BiGRU
+from .model_BiLSTM import get_BiLSTM
+from .model_LSTM import get_LSTM
 
 
-__all__ = ['get_BiGRU']
+__all__ = ['get_BiGRU', 'get_BiLSTM', 'get_LSTM']
