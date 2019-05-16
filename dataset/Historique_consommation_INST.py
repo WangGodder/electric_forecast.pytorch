@@ -5,7 +5,6 @@
 
 from torch.utils.data import dataset
 import numpy as np
-import csv
 import torch
 
 
@@ -38,8 +37,9 @@ class DataFolder(dataset):
         read all data from csv files from csv storing folder
         :return: a numpy array with shape (total num, 48) where 48 is the seq length of each daily data.
         """
-        # please finish this part
-        return np.zeros((10000, 48))
+
+        data = np.genfromtxt(self.folder_url, delimiter=',', dtype='object', skip_header=True)
+        return data
 
     def train(self):
         self.step = 'train'
