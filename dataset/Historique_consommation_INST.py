@@ -38,7 +38,7 @@ class DataFolder(dataset):
         :return: a numpy array with shape (total num, 48) where 48 is the seq length of each daily data.
         """
 
-        data = np.genfromtxt(self.folder_url, delimiter=',', dtype='object')
+        data = np.genfromtxt(self.folder_url, delimiter=',', dtype='object', skip_header=True)
         return data
 
     def train(self):
