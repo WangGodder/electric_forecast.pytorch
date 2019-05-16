@@ -5,8 +5,9 @@
 
 from torch.utils.data import dataset
 import numpy as np
+import xlrd
 import torch
-
+import os
 
 FOLDER_URL = ""
 
@@ -38,8 +39,22 @@ class DataFolder(dataset):
         :return: a numpy array with shape (total num, 48) where 48 is the seq length of each daily data.
         """
 
-        data = np.genfromtxt(self.folder_url, delimiter=',', dtype='object', skip_header=True)
-        return data
+        files = os.listdir(self.folder_url)
+        f = []
+        for file in files:
+            if not os.path.isdir(file):
+                f.append(file)
+
+        tableWashed = []
+        for i in range(0, len(f)):
+            data = xlrd.open_workbook(f[i], formatting_info=False)
+            table = data.sheets()[0]
+            # read the data for row 20th
+            for j in range(20, table.nrows):
+                judge = table.row_values(j, 2, )[0]
+                if (judge != ''):
+                    tableWashed.append(table.row_values(i, 2, ))
+        return np.array(tableWashed)
 
     def train(self):
         self.step = 'train'
