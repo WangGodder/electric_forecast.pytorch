@@ -8,17 +8,18 @@ from tqdm import tqdm
 import torch
 from torch.optim import *
 from models import *
-from dataset import *
+from dataset import get_dataset
 
 criterion = nn.MSELoss()
 epochs = 100
-batch_size = 64
+batch_size = 32
 learning_rate = 10 ** (-1.0)
 use_gpu = True
 
 seq_length = 46
 data_length = 1
 hidden_size = 100
+
 
 def train():
     net = get_BiGRU(seq_length, hidden_size)
@@ -30,15 +31,15 @@ def train():
     for epoch in range(epochs):
         dataset.train()
         net.train()
-        for (input, label) in tqdm(dataloader):
+        for data, label in tqdm(dataloader):
             # transpose input and label from shape (N, data length, -1) to (data length, N, -1)
-            input = torch.transpose(input, 0, 1)
+            data = torch.transpose(data, 0, 1)
             label = torch.transpose(label, 0, 1)
             if use_gpu:
-                input = input.cuda()
+                data = data.cuda()
                 label = label.cuda()
 
-            out = net(input)
+            out = net(data)
             loss = criterion(out, label)
 
             optimizer.zero_grad()
@@ -52,17 +53,21 @@ def train():
 def valid(net: nn.Module, dataloader: DataLoader):
     net.eval()
     sum_loss = []
-    for (input, label) in tqdm(dataloader):
+    for (data, label) in tqdm(dataloader):
         # transpose input and label from shape (N, data length, -1) to (data length, N, -1)
-        input = torch.transpose(input, 0, 1)
+        data = torch.transpose(data, 0, 1)
         label = torch.transpose(label, 0, 1)
 
         if use_gpu:
-            input = input.cuda()
+            data = data.cuda()
             label = label.cuda()
             net = net.cuda()
 
-        out = net(input)
+        out = net(data)
         loss = criterion(out, label)
         sum_loss.append(loss.data)
     return sum(sum_loss) / len(sum_loss)
+
+
+if __name__ == '__main__':
+    train()

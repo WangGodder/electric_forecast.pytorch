@@ -3,17 +3,17 @@
 # @Author  : Godder
 # @Github  : https://github.com/WangGodder
 
-from torch.utils.data import dataset
+from torch.utils.data import Dataset
 import numpy as np
 import xlrd
 import torch
 import os
 
-FOLDER_URL = ""
+FOLDER_URL = "./data/"
 
 
-class DataFolder(dataset):
-    def __init__(self, folder: str, seq_length, data_length=1, train_pro=0.8):
+class DataFolder(Dataset):
+    def __init__(self, folder: str, seq_length: int, data_length=1, train_pro=0.8):
         """
         init DataFolder
         :param folder: the url of the folder where data csv store
@@ -31,7 +31,7 @@ class DataFolder(dataset):
             raise ValueError("seq length: %d must smaller than the length of seq data: %d" % (seq_length, self.all_data.shape[1]))
         self.seq_length = seq_length
         self.all_num = self.all_data.shape[0] // data_length
-        self.train_num = self.all_num * train_pro
+        self.train_num = int(self.all_num * train_pro)
 
     def _read_all_data(self):
         """
@@ -43,7 +43,7 @@ class DataFolder(dataset):
         f = []
         for file in files:
             if not os.path.isdir(file):
-                f.append(file)
+                f.append(os.path.join(FOLDER_URL,file))
 
         tableWashed = []
         for i in range(0, len(f)):
@@ -53,7 +53,7 @@ class DataFolder(dataset):
             for j in range(20, table.nrows):
                 judge = table.row_values(j, 2, )[0]
                 if (judge != ''):
-                    tableWashed.append(table.row_values(i, 2, ))
+                    tableWashed.append(table.row_values(j, 2, ))
         return np.array(tableWashed)
 
     def train(self):
@@ -74,11 +74,11 @@ class DataFolder(dataset):
         :param item:
         :return: input tensor with shape (data_length, seq_length), label tensor with shape (data_length, 1)
         """
-        input = self.all_data[item * self.data_length: (item + 1) * self.data_length, 0: self.seq_length]
+        data = self.all_data[item * self.data_length: (item + 1) * self.data_length, 0: self.seq_length]
         label = self.all_data[item * self.data_length: (item + 1) * self.data_length, self.seq_length]
-        input = torch.tensor(input, dtype=torch.float32)
-        label = torch.tensor(label, dtype=torch.float32)
-        return input, label
+        data = torch.tensor(data).float()
+        label = torch.tensor(label).float()
+        return data, label
 
 
 def get_dataset(seq_length, data_length):
