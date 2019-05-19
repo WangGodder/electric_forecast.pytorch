@@ -10,9 +10,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 import random
-from DataUtils.Common import seed_num
-torch.manual_seed(seed_num)
-random.seed(seed_num)
+
 
 """
 Neural Networks model : GRU
@@ -21,36 +19,27 @@ Neural Networks model : GRU
 
 class GRU(nn.Module):
     
-    def __init__(self, args):
+    def __init__(self, seq_length, hidden_size, dropout=0.75, num_layer=2):
         super(GRU, self).__init__()
-        self.args = args
-        self.hidden_dim = args.lstm_hidden_dim
-        self.num_layers = args.lstm_num_layers
-        V = args.embed_num
-        D = args.embed_dim
-        C = args.class_num
-        self.embed = nn.Embedding(V, D, padding_idx=args.paddingId)
-        # pretrained  embedding
-        if args.word_Embedding:
-            self.embed.weight.data.copy_(args.pretrained_weight)
-
         # gru
-        self.gru = nn.GRU(D, self.hidden_dim, dropout=args.dropout, num_layers=self.num_layers)
+        self.gru = nn.GRU(seq_length, hidden_size, dropout=dropout, num_layers=num_layer)
         # linear
-        self.hidden2label = nn.Linear(self.hidden_dim, C)
+        self.hidden2label = nn.Linear(hidden_size, 1)
         #  dropout
-        self.dropout = nn.Dropout(args.dropout)
+        self.dropout = nn.Dropout(dropout)
+        self.module_name = 'GRU'
 
     def forward(self, input):
-        embed = self.embed(input)
-        input = embed.view(len(input), embed.size(1), -1)
         lstm_out, _ = self.gru(input)
         lstm_out = torch.transpose(lstm_out, 0, 1)
         lstm_out = torch.transpose(lstm_out, 1, 2)
         # pooling
         lstm_out = F.max_pool1d(lstm_out, lstm_out.size(2)).squeeze(2)
-        lstm_out = F.tanh(lstm_out)
         # linear
         y = self.hidden2label(lstm_out)
         logit = y
         return logit
+
+
+def get_GRU(seq_length, hidden_size, num_layer=1):
+    return GRU(seq_length, hidden_size, num_layer=num_layer)

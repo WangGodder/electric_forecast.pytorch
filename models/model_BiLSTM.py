@@ -21,11 +21,11 @@ class BiLSTM(nn.Module):
         super(BiLSTM, self).__init__()
 
         self.bilstm = nn.LSTM(seq_length, hidden_size // 2, num_layers=num_layer, dropout=dropout, bidirectional=True, bias=False)
-        # print(self.bilstm)
 
         self.hidden2label1 = nn.Linear(hidden_size, hidden_size // 2)
         self.hidden2label2 = nn.Linear(hidden_size // 2, 1)
         # self.dropout = nn.Dropout(config.dropout)
+        self.module_name = 'BiLSTM'
 
     def forward(self, x):
         bilstm_out, _ = self.bilstm(x)

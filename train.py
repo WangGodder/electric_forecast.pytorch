@@ -11,7 +11,7 @@ from models import *
 from dataset import get_dataset
 
 criterion = nn.MSELoss()
-epochs = 100
+epochs = 500
 batch_size = 32
 learning_rate = 10 ** (-1.0)
 use_gpu = True
@@ -22,7 +22,8 @@ hidden_size = 100
 
 
 def train():
-    net = get_BiGRU(seq_length, hidden_size)
+    # net = get_BiGRU(seq_length, hidden_size)
+    net = get_LSTM(seq_length, hidden_size)
     if use_gpu:
         net = net.cuda()
     optimizer = Adam(net.parameters(), lr=learning_rate)

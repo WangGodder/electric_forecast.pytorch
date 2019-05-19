@@ -25,16 +25,11 @@ class LSTM(nn.Module):
         # lstm
         self.lstm = nn.LSTM(seq_length, hidden_size, dropout=dropout, num_layers=num_layer)
 
-        # if args.init_weight:
-        #     print("Initing W .......")
-        #     # n = self.lstm.input_size * self.lstm
-        #     init.xavier_normal(self.lstm.all_weights[0][0], gain=np.sqrt(args.init_weight_value))
-        #     init.xavier_normal(self.lstm.all_weights[0][1], gain=np.sqrt(args.init_weight_value))
-
         # linear
         self.hidden2label = nn.Linear(hidden_size, 1)
         # dropout
         self.dropout = nn.Dropout(dropout)
+        self.module_name = "LSTM"
 
     def forward(self, x):
         # lstm

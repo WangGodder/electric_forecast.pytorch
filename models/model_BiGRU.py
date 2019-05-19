@@ -26,6 +26,7 @@ class BiGRU(nn.Module):
         self.hidden2label = nn.Linear(hidden_size * 2, 1)
         #  dropout
         self.dropout = nn.Dropout(dropout)
+        self.module_name = "BiGRU"
 
     def forward(self, input):
         # embed = self.dropout(input)
