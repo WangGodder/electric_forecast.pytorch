@@ -22,8 +22,10 @@ class BiGRU(nn.Module):
         super(BiGRU, self).__init__()
         # gru
         self.bigru = nn.GRU(input_size, hidden_size, dropout=dropout, num_layers=num_layer, bidirectional=True)
+
+        self.fc = nn.Conv1d(hidden_size * 2, hidden_size * 2, 7)
         # linear
-        self.hidden2label = nn.Linear(hidden_size * 2, 1)
+        self.hidden2label = nn.Linear(hidden_size * 2, hidden_size)
         #  dropout
         self.dropout = nn.Dropout(dropout)
         self.module_name = "BiGRU"
@@ -37,7 +39,8 @@ class BiGRU(nn.Module):
         gru_out = torch.transpose(gru_out, 1, 2)
         # pooling
         # gru_out = F.tanh(gru_out)
-        gru_out = F.max_pool1d(gru_out, gru_out.size(2)).squeeze(2)
+        # gru_out = F.max_pool1d(gru_out, gru_out.size(2)).squeeze(2)
+        gru_out = self.fc(gru_out)
         # gru_out = torch.tanh(gru_out)
         # linear
         y = self.hidden2label(gru_out)
@@ -50,7 +53,7 @@ def get_BiGRU(seq_length, hidden_size, num_layer=2):
 
 
 if __name__ == '__main__':
-    x = torch.randn(46, 32, 1)
-    net = BiGRU(1, 50)
+    x = torch.randn(7, 32, 48)
+    net = BiGRU(48, 48)
     out = net(x)
     print(out.shape)

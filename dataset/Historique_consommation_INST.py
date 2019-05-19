@@ -27,11 +27,11 @@ class DataFolder(Dataset):
         self.data_length = data_length
         # read all data
         self.all_data = self._read_all_data()
-        if seq_length >= self.all_data.shape[1]:
+        if seq_length > self.all_data.shape[1]:
             raise ValueError("seq length: %d must smaller than the length of seq data: %d" % (seq_length, self.all_data.shape[1]))
         self.seq_length = seq_length
-        self.all_num = self.all_data.shape[0] // data_length
-        self.train_num = int(self.all_num * train_pro)
+        self.all_num = self.all_data.shape[0]
+        self.train_num = int(self.all_num * train_pro) - data_length - 1
 
     def _read_all_data(self):
         """
@@ -66,7 +66,7 @@ class DataFolder(Dataset):
         if self.step is 'train':
             return self.train_num
         else:
-            return self.all_num - self.train_num
+            return self.all_num - self.train_num - (self.data_length + 1) * 2
 
     def __getitem__(self, item):
         """
@@ -74,8 +74,8 @@ class DataFolder(Dataset):
         :param item:
         :return: input tensor with shape (data_length, seq_length), label tensor with shape (data_length, 1)
         """
-        data = self.all_data[item * self.data_length: (item + 1) * self.data_length, 0: self.seq_length]
-        label = self.all_data[item * self.data_length: (item + 1) * self.data_length, self.seq_length]
+        data = self.all_data[item: item + self.data_length, 0: self.seq_length]
+        label = self.all_data[item + self.data_length: item + 1 + self.data_length, 0: self.seq_length]
         data = torch.tensor(data).float()
         label = torch.tensor(label).float()
         return data, label

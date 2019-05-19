@@ -23,8 +23,9 @@ class GRU(nn.Module):
         super(GRU, self).__init__()
         # gru
         self.gru = nn.GRU(seq_length, hidden_size, dropout=dropout, num_layers=num_layer)
+        self.fc = nn.Conv1d(hidden_size, hidden_size, 7)
         # linear
-        self.hidden2label = nn.Linear(hidden_size, 1)
+        self.hidden2label = nn.Linear(hidden_size, hidden_size)
         #  dropout
         self.dropout = nn.Dropout(dropout)
         self.module_name = 'GRU'
@@ -34,7 +35,8 @@ class GRU(nn.Module):
         lstm_out = torch.transpose(lstm_out, 0, 1)
         lstm_out = torch.transpose(lstm_out, 1, 2)
         # pooling
-        lstm_out = F.max_pool1d(lstm_out, lstm_out.size(2)).squeeze(2)
+        # lstm_out = F.max_pool1d(lstm_out, lstm_out.size(2)).squeeze(2)
+        lstm_out = self.fc(lstm_out)
         # linear
         y = self.hidden2label(lstm_out)
         logit = y

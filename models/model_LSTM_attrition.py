@@ -1,24 +1,19 @@
-# @Author : bamtercelboo
-# @Datetime : 2018/07/19 22:35
-# @File : model_LSTM.py
-# @Last Modify Time : 2018/07/19 22:35
-# @Contact : bamtercelboo@{gmail.com, 163.com}
-
+# coding: utf-8
+# @Time     : 
+# @Author   : Godder
+# @Github   : https://github.com/WangGodder
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
 from torch.autograd import Variable
-import numpy as np
-import random
-import torch.nn.init as init
+from torch.nn import functional as F
 
 """
-Neural Networks model : LSTM
+Neural Networks model : LSTM_Attrition
 """
 
 
 class LSTM(nn.Module):
-    
+
     def __init__(self, seq_length, hidden_size, dropout=0.75, num_layer=2):
         super(LSTM, self).__init__()
 
@@ -27,8 +22,12 @@ class LSTM(nn.Module):
 
         # linear
         self.hidden2label = nn.Conv1d(48, 48, 7, stride=1)
+
+        # weight
+        self.weight = nn.Conv1d(48, 48, 1, stride=1, bias=False)
+
         # dropout
-        self.module_name = "LSTM"
+        self.module_name = "LSTM_Attrition"
 
     def forward(self, x):
         # lstm
@@ -37,6 +36,7 @@ class LSTM(nn.Module):
         lstm_out = torch.transpose(lstm_out, 1, 2)
 
         logit = self.hidden2label(lstm_out)
+        logit = self.weight(logit)
         logit = logit.squeeze()
         return logit
 
