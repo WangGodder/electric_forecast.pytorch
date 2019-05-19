@@ -42,6 +42,7 @@ class BiLSTM(nn.Module):
 
         logit = y
         logit = self.weight(logit)
+        logit = logit.squeeze()
         return logit
 
 
