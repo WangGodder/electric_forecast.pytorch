@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
-
+from opt import  opt
 """
 Neural Networks model : Bidirection LSTM
 """
@@ -22,22 +22,31 @@ class BiLSTM(nn.Module):
 
         self.bilstm = nn.LSTM(seq_length, hidden_size // 2, num_layers=num_layer, dropout=dropout, bidirectional=True, bias=False)
 
-        self.fc = nn.Conv1d(hidden_size, hidden_size, 7, stride=1)
-        self.hidden2label1 = nn.Linear(hidden_size, hidden_size // 2)
-        self.hidden2label2 = nn.Linear(hidden_size // 2, hidden_size)
+        self.bilstm2 = nn.LSTM(hidden_size, opt.hidden_size2 // 2, num_layers=num_layer, dropout=dropout, bidirectional=True, bias=False)
+
+        # self.bilstm3 = nn.LSTM(opt.hidden_size2, opt.hidden_size3 // 2, num_layers=num_layer, dropout=dropout, bidirectional=True, bias=False)
+        # self.hidden2label1 = nn.Linear(hidden_size, hidden_size // 2)
+        # self.hidden2label2 = nn.Linear(hidden_size // 2, hidden_size)
+
+        self.fc = nn.Conv1d(opt.hidden_size2, opt.fc, 7, stride=1)
         # self.dropout = nn.Dropout(config.dropout)
         self.module_name = 'BiLSTM'
 
     def forward(self, x):
         bilstm_out, _ = self.bilstm(x)
 
+        bilstm_out, _ = self.bilstm2(bilstm_out)
+
+        # bilstm_out, _ = self.bilstm3(bilstm_out)
+
         bilstm_out = torch.transpose(bilstm_out, 0, 1)
         bilstm_out = torch.transpose(bilstm_out, 1, 2)
+
         # bilstm_out = F.max_pool1d(bilstm_out, bilstm_out.size(2)).squeeze(2)
-        bilstm_out = self.fc(bilstm_out).squeeze()
-        y = self.hidden2label1(bilstm_out)
-        y = self.hidden2label2(y)
+        y = self.fc(bilstm_out).squeeze()
+
         logit = y
+        logit = F.relu(logit, inplace=True)
         return logit
 
 

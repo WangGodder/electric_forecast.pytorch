@@ -23,14 +23,15 @@ class GRU(nn.Module):
         super(GRU, self).__init__()
         # gru
         self.gru = nn.GRU(seq_length, hidden_size, dropout=dropout, num_layers=num_layer)
-        self.fc = nn.Conv1d(hidden_size, hidden_size, 7)
+        self.weight = nn.Conv1d(1, 1, hidden_size, stride=hidden_size, bias=False)
         # linear
         self.hidden2label = nn.Linear(hidden_size, hidden_size)
-        # bn
+        #bn
         self.bn = nn.BatchNorm1d(hidden_size)
+        # weight
         #  dropout
         self.dropout = nn.Dropout(dropout)
-        self.module_name = 'GRU'
+        self.module_name = 'GRU_attrition'
 
     def forward(self, input):
         lstm_out, _ = self.gru(input)
@@ -38,20 +39,20 @@ class GRU(nn.Module):
         lstm_out = torch.transpose(lstm_out, 1, 2)
         # pooling
         # lstm_out = F.max_pool1d(lstm_out, lstm_out.size(2)).squeeze(2)
-        lstm_out = self.fc(lstm_out)
-        lstm_out = self.bn(lstm_out).squeeze()
+        lstm_out = self.bn(lstm_out)
+        lstm_out = self.weight(lstm_out).squeeze()
         # linear
         y = self.hidden2label(lstm_out)
         logit = y
         return logit
 
 
-def get_GRU(seq_length, hidden_size, num_layer=1):
+def get_GRU_attrition(seq_length, hidden_size, num_layer=2):
     return GRU(seq_length, hidden_size, num_layer=num_layer)
 
 
 if __name__ == '__main__':
-    x = torch.randn(7, 32, 48)
-    net = GRU(48, 48)
+    x = torch.randn(1, 32, 48 * 7)
+    net = GRU(48 * 7, 48 * 7)
     out = net(x)
     print(out.shape)

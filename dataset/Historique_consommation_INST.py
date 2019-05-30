@@ -13,7 +13,7 @@ FOLDER_URL = "./data/"
 
 
 class DataFolder(Dataset):
-    def __init__(self, folder: str, seq_length: int, data_length=1, train_pro=0.8):
+    def __init__(self, folder: str, seq_length: int, data_length=1, train_pro=0.8, preorder=False):
         """
         init DataFolder
         :param folder: the url of the folder where data csv store
@@ -27,6 +27,8 @@ class DataFolder(Dataset):
         self.data_length = data_length
         # read all data
         self.all_data = self._read_all_data()
+        if preorder:
+            self.pre_order()
         if seq_length > self.all_data.shape[1]:
             raise ValueError("seq length: %d must smaller than the length of seq data: %d" % (seq_length, self.all_data.shape[1]))
         self.seq_length = seq_length
@@ -56,6 +58,12 @@ class DataFolder(Dataset):
                     tableWashed.append(table.row_values(j, 2, ))
         return np.array(tableWashed)
 
+    def pre_order(self):
+        Max = np.max(self.all_data,axis=0)
+        Min = np.min(self.all_data,axis=0)
+        Div = Max - Min
+        self.all_data = (self.all_data - (Max + Min / 2)) / (Div / 2)
+        #self.all_data = (self.all_data - (Max+Min)*0.5 )/ (Div*0.5)
     def train(self):
         self.step = 'train'
 
@@ -75,12 +83,13 @@ class DataFolder(Dataset):
         :return: input tensor with shape (data_length, seq_length), label tensor with shape (data_length, 1)
         """
         data = self.all_data[item: item + self.data_length, 0: self.seq_length]
+        data = data.reshape(self.seq_length * self.data_length)
         label = self.all_data[item + self.data_length: item + 1 + self.data_length, 0: self.seq_length]
         data = torch.tensor(data).float()
         label = torch.tensor(label).float()
         return data, label
 
 
-def get_dataset(seq_length, data_length):
-    return DataFolder(FOLDER_URL, seq_length, data_length)
+def get_dataset(seq_length, data_length, pre_order):
+    return DataFolder(FOLDER_URL, seq_length, data_length, preorder=pre_order)
 

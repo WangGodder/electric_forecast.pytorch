@@ -23,14 +23,17 @@ class BiGRU(nn.Module):
         # gru
         self.bigru = nn.GRU(input_size, hidden_size, dropout=dropout, num_layers=num_layer, bidirectional=True)
 
-        self.fc = nn.Conv1d(hidden_size * 2, hidden_size * 2, 7)
+        self.fc = nn.Conv1d(hidden_size * 2, hidden_size * 2, 1)
         # linear
         self.hidden2label = nn.Linear(hidden_size * 2, hidden_size)
         # bn
         self.bn = nn.BatchNorm1d(hidden_size*2)
+        # weight
+        self.weight = nn.Conv1d(hidden_size * 2, hidden_size * 2, 7, bias=False)
+
         #  dropout
         self.dropout = nn.Dropout(dropout)
-        self.module_name = "BiGRU"
+        self.module_name = "BiGRU_attrition"
 
     def forward(self, input):
         # embed = self.dropout(input)
@@ -43,7 +46,8 @@ class BiGRU(nn.Module):
         # gru_out = F.tanh(gru_out)
         # gru_out = F.max_pool1d(gru_out, gru_out.size(2)).squeeze(2)
         gru_out = self.fc(gru_out)
-        gru_out = self.bn(gru_out).squeeze()
+        gru_out = self.bn(gru_out)
+        gru_out = self.weight(gru_out).squeeze()
         # gru_out = torch.tanh(gru_out)
         # linear
         y = self.hidden2label(gru_out)
@@ -51,7 +55,7 @@ class BiGRU(nn.Module):
         return logit
 
 
-def get_BiGRU(seq_length, hidden_size, num_layer=2):
+def get_BiGRU_attrition(seq_length, hidden_size, num_layer=2):
     return BiGRU(seq_length, hidden_size, num_layer=num_layer)
 
 
